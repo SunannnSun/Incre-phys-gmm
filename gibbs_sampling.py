@@ -1,13 +1,10 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.stats import invwishart
 from scipy.stats import multivariate_normal
-import scipy.io as scio
-from KDE import kernel_density_estimator
+from kernel_density_estimator import *
 
 
 def gibbs_sampling(data, assignment_array, parameter_list, mu_prior, cov_prior, num_aux=5, alpha=1):
-
     (N, M) = data.shape
 
     for i in np.random.permutation(N):
@@ -84,54 +81,39 @@ def draw_posterior_inverse_wishart(data, hyperparameter):
 
 
 def draw_posterior_kde(data, data_cov, kde_object):
-    iteration = 200
-    x_old = np.array([0, 0])
+    """Adaptive Metropolis Algorithm to approximate the Posterior of KDE"""
+    beta = 0.05
+    s_d = 2.38 ** 2 / 2
+    iteration = 100
+    x_old = np.random.multivariate_normal([0, 0], np.identity(2))
     f_old = np.sum(multivariate_normal.logpdf(data, mean=x_old, cov=data_cov)) + kde_object.score_samples(
         x_old[np.newaxis, :])
+    x_hist = x_old[np.newaxis, :]
     for t in range(iteration):
-        x_new = multivariate_normal.rvs(mean=x_old, cov=0.2 * np.identity(2))
+        if True:
+            random_walk_cov = 0.25 * np.identity(2)
+        else:
+            # k = x_hist.shape[0]
+            # empirical_cov = 1 / (k-1)  * (x_hist.T @ x_hist - k * np.mean(x_hist, axis=0)[np.newaxis, :].T
+            # @ np.mean(x_hist, axis=0)[np.newaxis, :])
+            random_walk_cov = (1 - beta) * s_d * np.cov(x_hist.T) + beta * (0.1 ** 2 / 2 * np.identity(2))
+        x_new = multivariate_normal.rvs(mean=x_old, cov=random_walk_cov)
         f_new = np.sum(multivariate_normal.logpdf(data, mean=x_new, cov=data_cov)) + kde_object.score_samples(
             x_new[np.newaxis, :])
         a_ratio = min([1, np.exp(np.clip(f_new - f_old, -50, 50))])
         if np.random.uniform(0, 1) <= a_ratio:
             x_old = x_new
             f_old = f_new
+        x_hist = np.append(x_hist, x_old[np.newaxis, :], axis=0)
     return x_old
 
+
 if __name__ == "__main__":
+    X1 = np.random.multivariate_normal([0, 0], [[15, 0.1], [0.1, 0.1]], int(0.3 * 50))
+    X2 = np.random.multivariate_normal([2, 2], [[0.1, 0], [0, 0.1]], int(0.7 * 50))
+    Prior = np.concatenate((X1, X2))
 
-    """Initialize Data"""
-    # np.random.seed(1)
-    # num_data = 20
-    # X1 = np.random.multivariate_normal([0, 0], [[15, 0.1], [0.1, 0.1]], int(0.3* num_data))
-    # X2 = np.random.multivariate_normal([2, 2], [[0.1, 0], [0, 0.1]], int(0.7 * num_data))
-    # Data = np.concatenate((X1, X2))
-    # Data = X2
-    Data = scio.loadmat('Increm_Learning/S_shape.mat')['Xi_ref'].T
+    Data = np.random.multivariate_normal([0, 0], [[0.1, 0], [0, 0.1]], int(200))
+    kde  = kernel_density_estimator(X2)
+    print(draw_posterior_kde(Data, np.cov(Data.T), kde))
 
-    """Initialize Prior"""
-    lambda_0 = {
-        "nu_0": 3,
-        "Sigma_0": np.array([[1, 0], [0, 1]])
-    }
-    kde = kernel_density_estimator(Data, True)
-
-    """Initial Guess of assignment_array and parameter_list"""
-    phi_list = []
-    for i in range(Data.shape[0]):
-        sigma = draw_posterior_inverse_wishart(Data[i, :][np.newaxis, :], lambda_0)
-        mu = draw_posterior_kde(Data[i, :], sigma, kde)
-        phi_list.append((mu, sigma))
-    C_array = np.arange(Data.shape[0])
-
-    """Begin Gibbs Sampling"""
-    for iteration in range(50):
-        C_array, phi_list = gibbs_sampling(Data, C_array, phi_list, kde, lambda_0)
-
-    """Plot results"""
-    fig, ax = plt.subplots()
-    colors = ["r", "g", "b", "k", 'c', 'm', 'w', 'y', 'crimson', 'lime']
-    for i in range(Data.shape[0]):
-        color = colors[C_array[i]]
-        ax.scatter(Data[i, 0], Data[i, 1], c=color)
-    plt.show()
