@@ -5,7 +5,7 @@ from scipy.signal import savgol_filter
 import ruptures as rpt
 
 
-def trajectory_pre_processing(data):
+def trajectory_pre_processing(data, plot_flag=False):
     """Given sequential trajectory data, run an adaptive kernel through the data and return a preliminary partition of
     the data as the initial state of gibbs sampling"""
 
@@ -36,6 +36,7 @@ def trajectory_pre_processing(data):
         else:
             count += 1
             assignment_array[i] = count
+    print(my_bkps)
 
     for k in range(len(my_bkps)):
         mu_k = np.mean(data[assignment_array == k], axis=0)
@@ -45,7 +46,7 @@ def trajectory_pre_processing(data):
 
 
 if __name__ == "__main__":
-    Data = scio.loadmat('Increm_Learning/S_shape.mat')['Xi_ref'].T
+    Data = scio.loadmat('Increm_Learning/double.mat')['Xi_ref'].T
     trajectory_pre_processing(Data)
     # print(np.convolve([1,2,3],[0.1,0.1, 0.1], 'same'))
     # plt.show()

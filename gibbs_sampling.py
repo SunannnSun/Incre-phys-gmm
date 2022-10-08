@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import invwishart
 from scipy.stats import multivariate_normal
-from kernel_density_estimator import *
+from prior_constructor import *
 
 
 def gibbs_sampling(data, assignment_array, parameter_list, mu_prior, cov_prior, num_aux=5, alpha=1):
