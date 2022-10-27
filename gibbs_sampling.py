@@ -1,11 +1,11 @@
-import numpy as np
-from scipy.stats import invwishart
-from scipy.stats import multivariate_normal
 from prior_constructor import *
 
 
-def gibbs_sampling(data, assignment_array, parameter_list, mu_prior, cov_prior, num_aux=5, alpha=1):
+def gibbs_sampling(data, assignment_array, parameter_list, *prior_distribution, num_aux=2, alpha=0.001):
     (N, M) = data.shape
+    if len(prior_distribution) == 2:
+        mu_prior = prior_distribution[0]
+        cov_prior = prior_distribution[1]
 
     for i in np.random.permutation(N):
         # Delete the current c_i and count distinct c_j for j != i
@@ -17,22 +17,26 @@ def gibbs_sampling(data, assignment_array, parameter_list, mu_prior, cov_prior, 
         for k, c_k in enumerate(values):
             # Unpack phi_c_k
             mu_c_k, sigma_c_k = parameter_list[c_k]
+
             # calculate the conditional probability for c_i = c_k
-            cond_prob[k] = counts[k] / (N + alpha - 1) * multivariate_normal.pdf(x=data[i, :], mean=mu_c_k,
+            cond_prob[k] = counts[k] / (N + alpha - 1) * multivariate_normal.logpdf(x=data[i, :], mean=mu_c_k,
                                                                                  cov=sigma_c_k)
         aux_parameter_list = []
         for k in range(num_aux):
             # Draw new theta for auxiliary variables
-            mu_c_k, sigma_c_k = draw_new_theta(mu_prior, cov_prior)
+            mu_c_k, sigma_c_k = draw_new_theta(prior_distribution)
             aux_parameter_list.append((mu_c_k, sigma_c_k))
-            cond_prob[K + k] = (alpha / num_aux) / (N + alpha - 1) * multivariate_normal.pdf(x=data[i, :],
+            # print(data[i, :])
+            cond_prob[K + k] = (alpha / num_aux) / (N + alpha - 1) * multivariate_normal.logpdf(x=data[i, :],
                                                                                              mean=mu_c_k,
                                                                                              cov=sigma_c_k)
 
         # Draw a new c_i
         cond_prob = cond_prob / np.sum(cond_prob)
         cond_prob = np.cumsum(cond_prob)
-        draw = np.where(cond_prob > np.random.uniform(low=0, high=1))[0][0]
+        rand = np.random.uniform(low=0, high=1)
+
+        draw = np.where(cond_prob > rand)[0][0]
         if draw < K:
             assignment_array[i] = values[draw]
         else:
@@ -57,16 +61,29 @@ def gibbs_sampling(data, assignment_array, parameter_list, mu_prior, cov_prior, 
     # Draw new phi given prior and associated data
     for k in range(len(parameter_list)):
         x_k = data[assignment_array == k]
-        sigma_k = draw_posterior_inverse_wishart(x_k, cov_prior)
-        mu_k = draw_posterior_kde(x_k, sigma_k, mu_prior)
+        if len(prior_distribution) == 2:
+            sigma_k = draw_posterior_inverse_wishart(x_k, cov_prior)
+            # mu_k = draw_posterior_kde(x_k, sigma_k, mu_prior)
+            # print(sigma_k)
+            mu_k = mu_prior.posterior_rvs(x_k, sigma_k)
+
+        else:
+            mu_k, sigma_k = prior_distribution[0].posterior_rvs(x_k)
         parameter_list[k] = (mu_k, sigma_k)
 
     return assignment_array, parameter_list
 
 
-def draw_new_theta(kde_object, hyperparameter):
-    new_mu = kde_object.sample()[0]
-    new_Sigma = invwishart(df=hyperparameter["nu_0"], scale=hyperparameter["Sigma_0"]).rvs()
+def draw_new_theta(prior_distribution):
+    if len(prior_distribution) == 2:
+        kde_object = prior_distribution[0]
+        hyperparameter = prior_distribution[1]
+        # new_mu = kde_object.sample()[0]
+        new_mu = kde_object.rvs()
+        new_Sigma = invwishart(df=hyperparameter["nu_0"], scale=hyperparameter["Sigma_0"]).rvs()
+    else:
+        prior_distribution = prior_distribution[0]
+        new_mu, new_Sigma = prior_distribution.rvs()
     return new_mu, new_Sigma
 
 
@@ -114,6 +131,4 @@ if __name__ == "__main__":
     Prior = np.concatenate((X1, X2))
 
     Data = np.random.multivariate_normal([0, 0], [[0.1, 0], [0, 0.1]], int(200))
-    kde  = kernel_density_estimator(X2)
-    print(draw_posterior_kde(Data, np.cov(Data.T), kde))
 
