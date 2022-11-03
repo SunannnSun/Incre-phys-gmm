@@ -1,6 +1,4 @@
-import time
-
-from prior_constructor import *
+import numpy as np
 
 
 def karcher_mean(data):
@@ -38,7 +36,7 @@ def calc_z_value(data_tilde, data):
     return np.exp(np.linalg.norm(x_tilde)-np.pi/2)**2
 
 
-def gibbs_sampling_3(data, assignment_array, prior_distribution, alpha):
+def gibbs_sampler(data, assignment_array, prior_distribution, alpha):
     pos_data = data[:, 0:2]
 
     (N, M) = pos_data.shape
@@ -82,12 +80,3 @@ def gibbs_sampling_3(data, assignment_array, prior_distribution, alpha):
                 assignment_array[index] = rearrange_list.index(value)
 
     return assignment_array
-
-
-if __name__ == "__main__":
-    Data = np.array([[np.cos(-3*np.pi / 4), np.sin(-3*np.pi / 4)], [np.cos(3*np.pi / 4), np.sin(3*np.pi / 4)],  [np.cos(np.pi / 4), np.sin(np.pi / 4)]])
-    mean = karcher_mean(Data)
-    print(np.rad2deg(np.arctan2(mean[1], mean[0])))
-    # mean = angular_mean(Data)
-    # print(np.rad2deg(mean))
-

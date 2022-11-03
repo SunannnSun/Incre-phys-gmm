@@ -1,9 +1,9 @@
 from main import *
 
 
-pkg_dir = 'datasets/'
+pkg_dir = 'matlab_data/'
 chosen_dataset = 10
-sub_sample = 1 # % '>2' for real 3D Datasets, '1' for 2D toy datasets
+sub_sample = 1 # % '>2' for real 3D Datasets, '1' for 2D toy matlab_data
 nb_trajectories = 7  # For real 3D data
 Data = load_dataset(pkg_dir, chosen_dataset, sub_sample, nb_trajectories)
 Data = Data[:, np.arange(0, Data.shape[1], sub_sample)]  # (M by N)

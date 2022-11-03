@@ -1,13 +1,9 @@
-from gibbs_sampling import *
 import random
 from sklearn.mixture import BayesianGaussianMixture
-import matplotlib as mpl
-from gibbs_sampling_2 import *
-import scipy.io as scio
+from gibbs_sampling_single_prior import *
 import matplotlib.pyplot as plt
-from load_dataset import load_dataset
+from util.load_matlab_data import load_dataset
 
-from main import normalize_velocity
 
 
 def plot_results(X, X_t, Y_, means, covariances, index, title):
@@ -84,9 +80,9 @@ def dist_map(angle, max_height):
 
 
 
-pkg_dir = 'datasets/'
+pkg_dir = 'matlab_data/'
 chosen_dataset = 10
-sub_sample = 4  # % '>2' for real 3D Datasets, '1' for 2D toy datasets
+sub_sample = 4  # % '>2' for real 3D Datasets, '1' for 2D toy matlab_data
 nb_trajectories = 7  # For real 3D data
 Data = load_dataset(pkg_dir, chosen_dataset, sub_sample, nb_trajectories)
 Data = Data[:, np.arange(0, Data.shape[1], sub_sample)]  # (M by N)

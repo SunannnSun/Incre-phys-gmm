@@ -1,4 +1,6 @@
 from prior_constructor import *
+from scipy.stats import invwishart
+from scipy.stats import multivariate_normal
 
 
 def gibbs_sampling(data, assignment_array, parameter_list, *prior_distribution, num_aux=2, alpha=0.001):
