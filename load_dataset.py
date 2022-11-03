@@ -36,7 +36,7 @@ def load_dataset(pkg_dir, dataset, sub_sample, nb_trajectories):
     print(final_dir)
 
     if dataset <= 6:
-        print("we dont currently offer this function")
+        Data = loadmat(final_dir)['Data']
     elif dataset <= 10:
         data_ = loadmat(r"{}".format(final_dir))
         data = np.array(data_["data"])

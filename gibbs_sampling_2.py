@@ -9,8 +9,8 @@ def gibbs_sampling_2(data, assignment_array, prior_distribution, alpha):
 
     (N, M) = pos_data.shape
     for i in np.random.permutation(N):
-        pos_data_exclude_i = np.delete(pos_data, i, axis=0)
-        vel_data_exclude_i = np.delete(vel_data, i, axis=0)
+        # pos_data_exclude_i = np.delete(pos_data, i, axis=0)
+        # vel_data_exclude_i = np.delete(vel_data, i, axis=0)
         data_exclude_i = np.delete(data, i, axis=0)
 
         assignment_array_exclude_i = np.delete(assignment_array, i)
