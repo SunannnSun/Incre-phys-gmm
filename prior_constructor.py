@@ -10,7 +10,7 @@ class prior_class:
             nu_0 = dim + 2
             kappa_0 = 1
             sigma_0 = np.zeros((3, 3))
-            sigma_0[0:2, 0:2] = np.cov(pos_data.T) / 5
+            sigma_0[0:2, 0:2] = np.cov(pos_data.T)
             sigma_0[2, 2] = 0.5
             lambda_0 = {
                 "sigma_0": sigma_0 * (nu_0 - dim - 1),
@@ -33,7 +33,6 @@ class prior_class:
         mu_0 = lambda_0["mu_0"]
         kappa_0 = lambda_0["kappa_0"]
         lambda_N = {
-            # "sigma_N": sigma_0 + num * sample_var,
             "sigma_N": sigma_0 + num * sample_var + kappa_0 * num / (kappa_0 + num) *
                        (sample_mean - mu_0)[:, np.newaxis] @ (sample_mean - mu_0)[np.newaxis, :],
             "nu_N": nu_0 + num,
@@ -54,6 +53,5 @@ class prior_class:
                 lambda_0["kappa_0"] * (lambda_0["nu_0"] - dim + 1))
         likelihood = multivariate_t(loc=lambda_0["mu_0"], shape=student_t_shape,
                                     df=(lambda_0["nu_0"] - dim + 1)).pdf(data_tilde)
-
         # likelihood = multivariate_normal(mean=lambda_0["mu_0"], cov=student_t_shape).pdf(data_tilde)
         return likelihood
