@@ -2,7 +2,7 @@ from util.load_data import *
 from util.process_data import *
 from util.spectral_clustering import spectral_clustering
 from prior_constructor import prior_class
-from sampler import gibbs_sampler
+from sampler import *
 import random
 
 
@@ -30,8 +30,6 @@ else:
     Data = normalize_velocity_vector(Data)
     Data = Data.T
 Data = Data[np.arange(0, Data.shape[0], 2), :]
-
-
 """#### Initialize Prior ####"""
 prior = prior_class(Data)
 
@@ -47,9 +45,9 @@ else:
 
 """##### Begin Sampling ######"""
 print("Data shape:", Data.shape)
-for iteration in range(30):
-    C_array = gibbs_sampler(Data, C_array, prior, alpha=1)
-    print("Iteration: %d; Number of Components: %d" % ((iteration + 1), np.max(C_array) + 1))
+# for iteration in range(30):
+    # C_array = gibbs_sampler(Data, C_array, prior, alpha=1)
+    # print("Iteration: %d; Number of Components: %d" % ((iteration + 1), np.max(C_array) + 1))
 
 
 """##### Plot Results ######"""
@@ -60,4 +58,4 @@ for n in range(Data.shape[0]):
     color = colors[C_array[n]]
     ax.scatter(Data[n, 0], Data[n, 1], c=color)
 ax.set_aspect('equal')
-plt.show()
+# plt.show()

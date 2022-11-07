@@ -2,10 +2,10 @@ import numpy as np
 
 
 def karcher_mean(data):
-    if len(data.shape) == 2:
-        num, dim = data.shape
-    elif len(data.shape) == 1:
+    if data.shape[0] == 1:
         return data
+    else:
+        num, dim = data.shape
     p = np.array([1, 0])
     while True:
         angle_sum = 0
@@ -23,9 +23,18 @@ def karcher_mean(data):
                 np.linalg.norm(x_tilde))
 
 
-def calc_z_value(data_tilde, data):
-    x = karcher_mean(data)
-    p = data_tilde
+def karcher_var(data):
+    num, dim = data.shape
+    mean = karcher_mean(data)
+    var = 0
+    for index in range(num):
+        var += calc_z_value(data[index, :], mean)
+    return 1 / num * var
+
+
+def calc_z_value(data_tilde, data_mean):
+    x = data_tilde
+    p = data_mean
     angle = np.arccos(np.clip(p @ x, 0, 1))
     if angle >= 0.01:
         x_tilde = (x - p * np.cos(angle)) * angle / np.sin(angle)
@@ -49,7 +58,7 @@ def gibbs_sampler(data, assignment_array, prior_distribution, alpha):
 
         for k, c_k in enumerate(values):
             data_c_k = data_no_i[assignment_array_no_i == c_k, :]
-            z = calc_z_value(data_i[2:4], data_c_k[:, 2:4])
+            z = calc_z_value(data_i[2:4], karcher_mean(data_c_k[:, 2:4]))
             augmented_data_i = np.hstack((data_i[0:2], z))
 
             augmented_data_c_k = np.hstack((data_c_k[:, 0:2], np.zeros((data_c_k.shape[0], 1))))
