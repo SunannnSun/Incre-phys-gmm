@@ -11,7 +11,7 @@ option 1: draw and load data
 option 2: load existing data
 option 3: load matlab data ###"""
 
-data_option = 2
+data_option = 3
 if data_option == 1:
     draw_data()
     _, _, x, y = load_data()
@@ -23,13 +23,12 @@ elif data_option == 2:
     Data = add_directional_features(x, y, if_normalize=True)
 else:
     pkg_dir = 'data/'
-    chosen_dataset = 8
+    chosen_dataset = 1
     sub_sample = 4  # % '>2' for real 3D Datasets, '1' for 2D toy matlab_data
     nb_trajectories = 7  # For real 3D data
     Data = load_matlab_data(pkg_dir, chosen_dataset, sub_sample, nb_trajectories)
     Data = normalize_velocity_vector(Data)
-    Data = Data.T
-Data = Data[np.arange(0, Data.shape[0], 2), :]
+Data = Data[np.arange(0, Data.shape[0], 4), :]
 """#### Initialize Prior ####"""
 prior = prior_class(Data)
 
@@ -45,9 +44,9 @@ else:
 
 """##### Begin Sampling ######"""
 print("Data shape:", Data.shape)
-# for iteration in range(30):
-    # C_array = gibbs_sampler(Data, C_array, prior, alpha=1)
-    # print("Iteration: %d; Number of Components: %d" % ((iteration + 1), np.max(C_array) + 1))
+for iteration in range(20):
+    C_array = gibbs_sampler(Data, C_array, prior, alpha=1)
+    print("Iteration: %d; Number of Components: %d" % ((iteration + 1), np.max(C_array) + 1))
 
 
 """##### Plot Results ######"""
@@ -58,4 +57,4 @@ for n in range(Data.shape[0]):
     color = colors[C_array[n]]
     ax.scatter(Data[n, 0], Data[n, 1], c=color)
 ax.set_aspect('equal')
-# plt.show()
+plt.show()

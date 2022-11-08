@@ -4,29 +4,29 @@ from scipy.stats import multivariate_t
 
 class prior_class:
     def __init__(self, data):
-        num, dim = data.shape
-        pos_data = data[:, 0:int(dim/2)]
-        if int(dim/2) == 2:
-            nu_0 = dim + 2
-            kappa_0 = 1
-            sigma_0 = np.zeros((3, 3))
-            sigma_0[0:2, 0:2] = np.cov(pos_data.T)
-            sigma_0[2, 2] = 0.5
-            lambda_0 = {
-                "sigma_0": sigma_0 * (nu_0 - dim - 1),
-                "nu_0": nu_0,
-                "mu_0": np.hstack((np.mean(pos_data, axis=0), 0)),
-                "kappa_0": kappa_0,
-                }
-        else:  # Implement 3D case
-            lambda_0 = 1
+        num, _ = data.shape
+        dim = 3
+        pos_data = data[:, 0:2]
+        nu_0 = dim + 2
+        kappa_0 = 1
+        sigma_0 = np.zeros((3, 3))
+        sigma_0[0:2, 0:2] = np.cov(pos_data.T)
+        sigma_0[2, 2] = 0.1
+        lambda_0 = {
+            "sigma_0": sigma_0 * (nu_0 - dim - 1),
+            "nu_0": nu_0,
+            "mu_0": np.hstack((np.mean(pos_data, axis=0), 0)),
+            "kappa_0": kappa_0,
+            }
+
         self.lambda_0 = lambda_0
 
-    def posterior_predictive(self, data_tilde, data):
+    def posterior_predictive(self, data_tilde, data, direction_variance):
         lambda_0 = self.lambda_0
         num, dim = data.shape
         sample_mean = np.mean(data, axis=0)
         sample_var = 1 / num * (data - sample_mean).T @ (data - sample_mean)
+        sample_var[-1, -1] = direction_variance
 
         sigma_0 = lambda_0["sigma_0"]
         nu_0 = lambda_0["nu_0"]

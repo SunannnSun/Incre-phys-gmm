@@ -41,7 +41,7 @@ def calc_z_value(data_tilde, data_mean):
     else:
         x_tilde = np.zeros(2)
     # return np.linalg.norm(x_tilde)
-    return np.exp(np.linalg.norm(x_tilde) - np.pi / 2) ** 4
+    return np.exp(np.linalg.norm(x_tilde) - np.pi / 2) ** 2
 
 
 def gibbs_sampler(data, assignment_array, prior_distribution, alpha):
@@ -64,7 +64,8 @@ def gibbs_sampler(data, assignment_array, prior_distribution, alpha):
             augmented_data_c_k = np.hstack((data_c_k[:, 0:2], np.zeros((data_c_k.shape[0], 1))))
 
             data_post_pred = prior_distribution.posterior_predictive(data_tilde=augmented_data_i,
-                                                                     data=augmented_data_c_k)
+                                                                     data=augmented_data_c_k,
+                                                                     direction_variance=karcher_var(data_c_k[:, 2:4]))
             cond_prob[k] = counts[k] / (N - 1 + alpha) * data_post_pred
 
         cond_prob[-1] = alpha / (N - 1 + alpha) * prior_distribution.prior_predictive(
